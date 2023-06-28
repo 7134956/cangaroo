@@ -51,7 +51,7 @@ bool DbcParser::parseFile(QFile *file, CanDb &candb)
 
 DbcToken *DbcParser::createNewToken(QChar ch, int line, int column)
 {
-    static const QString acceptableIdStartChars("ABCDEFGHIKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
+    static const QString acceptableIdStartChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
     static const QRegExp numberRegExp("^(\\d+(\\.\\d*)?(E[-+]?\\d*)?)$");
 
     if (ch.isSpace()) {
