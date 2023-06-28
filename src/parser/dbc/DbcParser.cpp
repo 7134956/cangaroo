@@ -265,13 +265,17 @@ bool DbcParser::expectIdentifier(DbcParser::DbcTokenList &tokens, QString *id, b
 bool DbcParser::expectString(DbcParser::DbcTokenList &tokens, QString *str, bool skipWhitespace)
 {
     QString quotedStr;
-    bool ok = expectData(tokens, dbc_tok_string, &quotedStr, skipWhitespace);
-    if (ok && quotedStr.length()>=2) {
-        *str = quotedStr.mid(1, quotedStr.length()-2);
-        return true;
-    } else {
-        return false;
+    if (expectData(tokens, dbc_tok_string, &quotedStr, skipWhitespace)) {
+        // Remove any escape characters
+        quotedStr.replace(QRegExp("\\\\(.)"), "\\1");
+
+        // Remove leading and trailing quotes
+        if (quotedStr.length() >=2 ) {
+            *str = quotedStr.mid(1, quotedStr.length()-2);
+            return true;
+        }
     }
+    return false;
 }
 
 bool DbcParser::expectNumber(DbcParser::DbcTokenList &tokens, QString *str, bool skipWhitespace)
