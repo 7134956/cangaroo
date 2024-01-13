@@ -37,16 +37,16 @@
 #include <QThread>
 
 SLCANInterface::SLCANInterface(SLCANDriver *driver, int index, QString name, bool fd_support)
-  : CanInterface((CanDriver *)driver),
-	_idx(index),
-    _isOpen(false),
-    _serport(NULL),
-    _msg_queue(),
-    _name(name),
-    _rx_linbuf_ctr(0),
-    _rxbuf_head(0),
-    _rxbuf_tail(0),
-    _ts_mode(ts_mode_SIOCSHWTSTAMP)
+    : CanInterface((CanDriver *)driver),
+      _idx(index),
+      _isOpen(false),
+      _serport(NULL),
+      _msg_queue(),
+      _name(name),
+      _rx_linbuf_ctr(0),
+      _rxbuf_head(0),
+      _rxbuf_tail(0),
+      _ts_mode(ts_mode_SIOCSHWTSTAMP)
 {
     // Set defaults
     _settings.setBitrate(500000);
@@ -55,11 +55,13 @@ SLCANInterface::SLCANInterface(SLCANDriver *driver, int index, QString name, boo
     _config.supports_canfd = fd_support;
 }
 
-SLCANInterface::~SLCANInterface() {
+SLCANInterface::~SLCANInterface()
+{
 }
 
-QString SLCANInterface::getDetailsStr() const {
-    if(_config.supports_canfd)
+QString SLCANInterface::getDetailsStr() const
+{
+    if (_config.supports_canfd)
     {
         return "CANable with CANFD support";
     }
@@ -69,11 +71,13 @@ QString SLCANInterface::getDetailsStr() const {
     }
 }
 
-QString SLCANInterface::getName() const {
-	return _name;
+QString SLCANInterface::getName() const
+{
+    return _name;
 }
 
-void SLCANInterface::setName(QString name) {
+void SLCANInterface::setName(QString name)
+{
     _name = name;
 }
 
@@ -85,10 +89,13 @@ QList<CanTiming> SLCANInterface::getAvailableBitrates()
 
     QList<unsigned> samplePoints({875});
 
-    unsigned i=0;
-    foreach (unsigned br, bitrates) {
-        foreach(unsigned br_fd, bitrates_fd) {
-            foreach (unsigned sp, samplePoints) {
+    unsigned i = 0;
+    foreach (unsigned br, bitrates)
+    {
+        foreach (unsigned br_fd, bitrates_fd)
+        {
+            foreach (unsigned sp, samplePoints)
+            {
                 retval << CanTiming(i++, br, br_fd, sp);
             }
         }
@@ -96,7 +103,6 @@ QList<CanTiming> SLCANInterface::getAvailableBitrates()
 
     return retval;
 }
-
 
 void SLCANInterface::applyConfig(const MeasurementInterface &mi)
 {
@@ -146,11 +152,13 @@ uint32_t SLCANInterface::getCapabilities()
         CanInterface::capability_listen_only |
         CanInterface::capability_auto_restart;
 
-    if (supportsCanFD()) {
+    if (supportsCanFD())
+    {
         retval |= CanInterface::capability_canfd;
     }
 
-    if (supportsTripleSampling()) {
+    if (supportsTripleSampling())
+    {
         retval |= CanInterface::capability_triple_sampling;
     }
 
@@ -164,7 +172,7 @@ bool SLCANInterface::updateStatistics()
 
 uint32_t SLCANInterface::getState()
 {
-    if(_isOpen)
+    if (_isOpen)
         return state_ok;
     else
         return state_bus_off;
@@ -200,13 +208,14 @@ int SLCANInterface::getNumTxDropped()
     return _status.tx_dropped;
 }
 
-int SLCANInterface::getIfIndex() {
+int SLCANInterface::getIfIndex()
+{
     return _idx;
 }
 
 void SLCANInterface::open()
 {
-    if(_serport != NULL)
+    if (_serport != NULL)
     {
         delete _serport;
     }
@@ -221,9 +230,12 @@ void SLCANInterface::open()
     _serport->setStopBits(QSerialPort::OneStop);
     _serport->setFlowControl(QSerialPort::NoFlowControl);
     _serport->setReadBufferSize(2048);
-    if (_serport->open(QIODevice::ReadWrite)) {
-        //perror("Serport connected!");
-    } else {
+    if (_serport->open(QIODevice::ReadWrite))
+    {
+        // perror("Serport connected!");
+    }
+    else
+    {
         perror("Serport connect failed!");
         _serport_mutex.unlock();
         _isOpen = false;
@@ -233,77 +245,74 @@ void SLCANInterface::open()
     _serport->clear();
 
     // Set the classic CAN bitrate
-    switch(_settings.bitrate())
+    switch (_settings.bitrate())
     {
-        case 1000000:
-            _serport->write("S8\r", 3);
-            _serport->flush();
-            break;
-        case 750000:
-            _serport->write("S7\r", 3);
-            _serport->flush();
-            break;
-        case 500000:
-            _serport->write("S6\r", 3);
-            _serport->flush();
-            break;
-        case 250000:
-            _serport->write("S5\r", 3);
-            _serport->flush();
-            break;
-        case 125000:
-            _serport->write("S4\r", 3);
-            _serport->flush();
-            break;
-        case 100000:
-            _serport->write("S3\r", 3);
-            _serport->flush();
-            break;
-        case 83333:
-            _serport->write("S9\r", 3);
-            _serport->flush();
-            break;
-        case 50000:
-            _serport->write("S2\r", 3);
-            _serport->flush();
-            break;
-        case 20000:
-            _serport->write("S1\r", 3);
-            _serport->flush();
-            break;
-        case 10000:
-            _serport->write("S0\r", 3);
-            _serport->flush();
-            break;
-        default:
-            // Default to 10k
-            _serport->write("S0\r", 3);
-            _serport->flush();
-            break;
+    case 1000000:
+        _serport->write("S8\r", 3);
+        _serport->flush();
+        break;
+    case 750000:
+        _serport->write("S7\r", 3);
+        _serport->flush();
+        break;
+    case 500000:
+        _serport->write("S6\r", 3);
+        _serport->flush();
+        break;
+    case 250000:
+        _serport->write("S5\r", 3);
+        _serport->flush();
+        break;
+    case 125000:
+        _serport->write("S4\r", 3);
+        _serport->flush();
+        break;
+    case 100000:
+        _serport->write("S3\r", 3);
+        _serport->flush();
+        break;
+    case 83333:
+        _serport->write("S9\r", 3);
+        _serport->flush();
+        break;
+    case 50000:
+        _serport->write("S2\r", 3);
+        _serport->flush();
+        break;
+    case 20000:
+        _serport->write("S1\r", 3);
+        _serport->flush();
+        break;
+    case 10000:
+        _serport->write("S0\r", 3);
+        _serport->flush();
+        break;
+    default:
+        // Default to 10k
+        _serport->write("S0\r", 3);
+        _serport->flush();
+        break;
     }
 
     _serport->waitForBytesWritten(300);
 
-
-
     // Set configured BRS rate
-    if(_config.supports_canfd)
+    if (_config.supports_canfd)
     {
-        switch(_settings.fdBitrate())
+        switch (_settings.fdBitrate())
         {
-            case 2000000:
-                _serport->write("Y2\r", 3);
-                _serport->flush();
-                break;
-            case 5000000:
-                _serport->write("Y5\r", 3);
-                _serport->flush();
-                break;
+        case 2000000:
+            _serport->write("Y2\r", 3);
+            _serport->flush();
+            break;
+        case 5000000:
+            _serport->write("Y5\r", 3);
+            _serport->flush();
+            break;
         }
     }
 
     _serport->waitForBytesWritten(300);
-
 
     // Open the port
     _serport->write("O\r\n", 3);
@@ -322,7 +331,7 @@ void SLCANInterface::close()
     if (_serport->isOpen())
     {
         // Close CAN port
-        _serport->write("C\r", 2);        
+        _serport->write("C\r", 2);
         _serport->flush();
         _serport->waitForBytesWritten(300);
         _serport->clear();
@@ -338,21 +347,21 @@ bool SLCANInterface::isOpen()
     return _isOpen;
 }
 
-void SLCANInterface::sendMessage(const CanMessage &msg) {
+void SLCANInterface::sendMessage(const CanMessage &msg)
+{
 
     // SLCAN_MTU plus null terminator
-    char buf[SLCAN_MTU+1] = {0};
+    char buf[SLCAN_MTU + 1] = {0};
 
     uint8_t msg_idx = 0;
 
     // Message is FD
     // Add character for frame type
-    if(msg.isFD())
+    if (msg.isFD())
     {
-        if(msg.isBRS())
+        if (msg.isBRS())
         {
             buf[msg_idx] = 'b';
-
         }
         else
         {
@@ -363,7 +372,8 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     // Add character for frame type
     else
     {
-        if (msg.isRTR()) {
+        if (msg.isRTR())
+        {
             buf[msg_idx] = 'r';
         }
         else
@@ -386,7 +396,7 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     msg_idx++;
 
     // Add identifier to buffer
-    for(uint8_t j = id_len; j > 0; j--)
+    for (uint8_t j = id_len; j > 0; j--)
     {
         // Add nibble to buffer
         buf[j] = (tmp & 0xF);
@@ -397,16 +407,15 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     // Sanity check length
     int8_t bytes = msg.getLength();
 
-
-    if(bytes < 0)
+    if (bytes < 0)
         return;
-    if(bytes > 64)
+    if (bytes > 64)
         return;
 
     // If canfd
-    if(bytes > 8)
+    if (bytes > 8)
     {
-        switch(bytes)
+        switch (bytes)
         {
         case 12:
             bytes = 0x9;
@@ -445,9 +454,12 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     // Convert to ASCII (2nd character to end)
     for (uint8_t j = 1; j < msg_idx; j++)
     {
-        if (buf[j] < 0xA) {
+        if (buf[j] < 0xA)
+        {
             buf[j] += 0x30;
-        } else {
+        }
+        else
+        {
             buf[j] += 0x37;
         }
     }
@@ -459,7 +471,6 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     buf[msg_idx] = '\0';
 
     _msg_queue.append(QString(buf));
-
 }
 
 bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeout_ms)
@@ -468,7 +479,7 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
     QThread().msleep(1);
 
     // Transmit all items that are queued
-    while(!_msg_queue.empty())
+    while (!_msg_queue.empty())
     {
         // Consume first item
         QString tmp = _msg_queue.front();
@@ -485,15 +496,15 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
     // RX doesn't work on windows unless we call this for some reason
     _serport->waitForReadyRead(1);
 
-    if(_serport->bytesAvailable())
+    if (_serport->bytesAvailable())
     {
         // This is called when readyRead() is emitted
         QByteArray datas = _serport->readAll();
         _rxbuf_mutex.lock();
-        for(int i=0; i<datas.count(); i++)
+        for (int i = 0; i < datas.count(); i++)
         {
             // If incrementing the head will hit the tail, we've filled the buffer. Reset and discard all data.
-            if(((_rxbuf_head + 1) % RXCIRBUF_LEN) == _rxbuf_tail)
+            if (((_rxbuf_head + 1) % RXCIRBUF_LEN) == _rxbuf_tail)
             {
                 _rxbuf_head = 0;
                 _rxbuf_tail = 0;
@@ -508,21 +519,19 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
         _rxbuf_mutex.unlock();
     }
 
-
-
     //////////////////////////
 
     bool ret = false;
     _rxbuf_mutex.lock();
-    while(_rxbuf_tail != _rxbuf_head)
+    while (_rxbuf_tail != _rxbuf_head)
     {
         // Save data if room
-        if(_rx_linbuf_ctr < SLCAN_MTU)
+        if (_rx_linbuf_ctr < SLCAN_MTU)
         {
             _rx_linbuf[_rx_linbuf_ctr++] = _rxbuf[_rxbuf_tail];
 
             // If we have a newline, then we just finished parsing a CAN message.
-            if(_rxbuf[_rxbuf_tail] == '\r')
+            if (_rxbuf[_rxbuf_tail] == '\r')
             {
                 CanMessage msg;
                 ret = parseMessage(msg);
@@ -548,7 +557,7 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
 {
     // Set timestamp to current time
     struct timeval tv;
-    gettimeofday(&tv,NULL);
+    gettimeofday(&tv, NULL);
     msg.setTimestamp(tv);
 
     // Defaults
@@ -562,64 +571,61 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     for (int i = 1; i < _rx_linbuf_ctr; i++)
     {
         // Lowercase letters
-        if(_rx_linbuf[i] >= 'a')
+        if (_rx_linbuf[i] >= 'a')
             _rx_linbuf[i] = _rx_linbuf[i] - 'a' + 10;
         // Uppercase letters
-        else if(_rx_linbuf[i] >= 'A')
+        else if (_rx_linbuf[i] >= 'A')
             _rx_linbuf[i] = _rx_linbuf[i] - 'A' + 10;
         // Numbers
         else
             _rx_linbuf[i] = _rx_linbuf[i] - '0';
     }
 
-
     // Handle each incoming command
-    switch(_rx_linbuf[0])
+    switch (_rx_linbuf[0])
     {
 
-        // Transmit data frame command
-        case 'T':
-            msg.setExtended(1);
-            break;
-        case 't':
-            msg.setExtended(0);
-            break;
+    // Transmit data frame command
+    case 'T':
+        msg.setExtended(1);
+        break;
+    case 't':
+        msg.setExtended(0);
+        break;
 
-        // Transmit remote frame command
-        case 'r':
-            msg.setExtended(0);
-            msg.setRTR(1);
-            break;
-        case 'R':
-            msg.setExtended(1);
-            msg.setRTR(1);
-            break;
+    // Transmit remote frame command
+    case 'r':
+        msg.setExtended(0);
+        msg.setRTR(1);
+        break;
+    case 'R':
+        msg.setExtended(1);
+        msg.setRTR(1);
+        break;
 
-        // CANFD transmit - no BRS
-        case 'd':
-            msg.setExtended(0);
-            msg_is_fd = true;
-            break;
-        case 'D':
-            msg.setExtended(1);
-            msg_is_fd = true;
-            break;
+    // CANFD transmit - no BRS
+    case 'd':
+        msg.setExtended(0);
+        msg_is_fd = true;
+        break;
+    case 'D':
+        msg.setExtended(1);
+        msg_is_fd = true;
+        break;
 
-        // CANFD transmit - with BRS
-        case 'b':
-            msg.setExtended(0);
-            msg_is_fd = true;
-            break;
-        case 'B':
-            msg.setExtended(1);
-            msg_is_fd = true;
-            break;
+    // CANFD transmit - with BRS
+    case 'b':
+        msg.setExtended(0);
+        msg_is_fd = true;
+        break;
+    case 'B':
+        msg.setExtended(1);
+        msg_is_fd = true;
+        break;
 
-
-
-        // Invalid command
-        default:
-            return false;
+    // Invalid command
+    default:
+        return false;
     }
 
     // Start parsing at second byte (skip command byte)
@@ -629,18 +635,17 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     uint8_t id_len = SLCAN_STD_ID_LEN;
 
     // Update length if message is extended ID
-    if(msg.isExtended())
+    if (msg.isExtended())
         id_len = SLCAN_EXT_ID_LEN;
 
     uint32_t id_tmp = 0;
 
     // Iterate through ID bytes
-    while(parse_loc <= id_len)
+    while (parse_loc <= id_len)
     {
         id_tmp *= 16;
         id_tmp += _rx_linbuf[parse_loc++];
     }
-
 
     msg.setId(id_tmp);
 
@@ -648,18 +653,18 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     uint8_t dlc_code_raw = _rx_linbuf[parse_loc++];
 
     // If dlc is too long for an FD frame
-    if(msg_is_fd && dlc_code_raw > 0xF)
+    if (msg_is_fd && dlc_code_raw > 0xF)
     {
         return false;
     }
-    if(!msg_is_fd && dlc_code_raw > 0x8)
+    if (!msg_is_fd && dlc_code_raw > 0x8)
     {
         return false;
     }
 
-    if(dlc_code_raw > 0x8)
+    if (dlc_code_raw > 0x8)
     {
-        switch(dlc_code_raw)
+        switch (dlc_code_raw)
         {
         case 0x9:
             dlc_code_raw = 12;
@@ -694,11 +699,13 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     // Calculate number of bytes we expect in the message
     int8_t bytes_in_msg = dlc_code_raw;
 
-    if(bytes_in_msg < 0) {
+    if (bytes_in_msg < 0)
+    {
         perror("Invalid length < 0");
         return false;
     }
-    if(bytes_in_msg > 64) {
+    if (bytes_in_msg > 64)
+    {
         perror("Invalid length > 64");
         return false;
     }
@@ -707,7 +714,7 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     // TODO: Guard against walking off the end of the string!
     for (uint8_t i = 0; i < bytes_in_msg; i++)
     {
-        msg.setByte(i,  (_rx_linbuf[parse_loc] << 4) + _rx_linbuf[parse_loc+1]);
+        msg.setByte(i, (_rx_linbuf[parse_loc] << 4) + _rx_linbuf[parse_loc + 1]);
         parse_loc += 2;
     }
 
@@ -716,27 +723,24 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     _rx_linbuf[0] = '\0';
     return true;
 
+    /*
 
-/*
-
-    // FIXME
-    if (_ts_mode == ts_mode_SIOCSHWTSTAMP) {
-        // TODO implement me
-        _ts_mode = ts_mode_SIOCGSTAMPNS;
-    }
-
-    if (_ts_mode==ts_mode_SIOCGSTAMPNS) {
-        if (ioctl(_fd, SIOCGSTAMPNS, &ts_rcv) == 0) {
-            msg.setTimestamp(ts_rcv.tv_sec, ts_rcv.tv_nsec/1000);
-        } else {
-            _ts_mode = ts_mode_SIOCGSTAMP;
+        // FIXME
+        if (_ts_mode == ts_mode_SIOCSHWTSTAMP) {
+            // TODO implement me
+            _ts_mode = ts_mode_SIOCGSTAMPNS;
         }
-    }
 
-    if (_ts_mode==ts_mode_SIOCGSTAMP) {
-        ioctl(_fd, SIOCGSTAMP, &tv_rcv);
-        msg.setTimestamp(tv_rcv.tv_sec, tv_rcv.tv_usec);
-    }*/
+        if (_ts_mode==ts_mode_SIOCGSTAMPNS) {
+            if (ioctl(_fd, SIOCGSTAMPNS, &ts_rcv) == 0) {
+                msg.setTimestamp(ts_rcv.tv_sec, ts_rcv.tv_nsec/1000);
+            } else {
+                _ts_mode = ts_mode_SIOCGSTAMP;
+            }
+        }
 
-
+        if (_ts_mode==ts_mode_SIOCGSTAMP) {
+            ioctl(_fd, SIOCGSTAMP, &tv_rcv);
+            msg.setTimestamp(tv_rcv.tv_sec, tv_rcv.tv_usec);
+        }*/
 }

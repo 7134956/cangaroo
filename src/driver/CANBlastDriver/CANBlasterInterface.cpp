@@ -36,14 +36,13 @@
 #include <QTimer>
 #include <QNetworkDatagram>
 
-
 CANBlasterInterface::CANBlasterInterface(CANBlasterDriver *driver, int index, QString name, bool fd_support)
-  : CanInterface((CanDriver *)driver),
-	_idx(index),
-    _isOpen(false),
-    _name(name),
-    _ts_mode(ts_mode_SIOCSHWTSTAMP),
-    _socket(NULL)
+    : CanInterface((CanDriver *)driver),
+      _idx(index),
+      _isOpen(false),
+      _name(name),
+      _ts_mode(ts_mode_SIOCSHWTSTAMP),
+      _socket(NULL)
 {
     // Set defaults
     _settings.setBitrate(500000);
@@ -52,14 +51,16 @@ CANBlasterInterface::CANBlasterInterface(CANBlasterDriver *driver, int index, QS
     _config.supports_canfd = fd_support;
 
     // Record start time
-    gettimeofday(&_heartbeat_time,NULL);
+    gettimeofday(&_heartbeat_time, NULL);
 }
 
-CANBlasterInterface::~CANBlasterInterface() {
+CANBlasterInterface::~CANBlasterInterface()
+{
 }
 
-QString CANBlasterInterface::getDetailsStr() const {
-    if(_config.supports_canfd)
+QString CANBlasterInterface::getDetailsStr() const
+{
+    if (_config.supports_canfd)
     {
         return "CANBlaster client with CANFD support";
     }
@@ -69,11 +70,13 @@ QString CANBlasterInterface::getDetailsStr() const {
     }
 }
 
-QString CANBlasterInterface::getName() const {
-	return _name;
+QString CANBlasterInterface::getName() const
+{
+    return _name;
 }
 
-void CANBlasterInterface::setName(QString name) {
+void CANBlasterInterface::setName(QString name)
+{
     _name = name;
 }
 
@@ -81,14 +84,17 @@ QList<CanTiming> CANBlasterInterface::getAvailableBitrates()
 {
     QList<CanTiming> retval;
     QList<unsigned> bitrates({10000, 20000, 50000, 83333, 100000, 125000, 250000, 500000, 800000, 1000000});
-    QList<unsigned> bitrates_fd({0, 2000000, 5000000});
+    QList<unsigned> bitrates_fd({0, 500000, 2000000, 5000000});
 
     QList<unsigned> samplePoints({875});
 
-    unsigned i=0;
-    foreach (unsigned br, bitrates) {
-        foreach(unsigned br_fd, bitrates_fd) {
-            foreach (unsigned sp, samplePoints) {
+    unsigned i = 0;
+    foreach (unsigned br, bitrates)
+    {
+        foreach (unsigned br_fd, bitrates_fd)
+        {
+            foreach (unsigned sp, samplePoints)
+            {
                 retval << CanTiming(i++, br, br_fd, sp);
             }
         }
@@ -97,14 +103,11 @@ QList<CanTiming> CANBlasterInterface::getAvailableBitrates()
     return retval;
 }
 
-
 void CANBlasterInterface::applyConfig(const MeasurementInterface &mi)
 {
     // Save settings for port configuration
     _settings = mi;
 }
-
-
 
 bool CANBlasterInterface::supportsTimingConfiguration()
 {
@@ -133,11 +136,13 @@ uint32_t CANBlasterInterface::getCapabilities()
         CanInterface::capability_listen_only |
         CanInterface::capability_auto_restart;
 
-    if (supportsCanFD()) {
+    if (supportsCanFD())
+    {
         retval |= CanInterface::capability_canfd;
     }
 
-    if (supportsTripleSampling()) {
+    if (supportsTripleSampling())
+    {
         retval |= CanInterface::capability_triple_sampling;
     }
 
@@ -151,7 +156,7 @@ bool CANBlasterInterface::updateStatistics()
 
 uint32_t CANBlasterInterface::getState()
 {
-    if(_isOpen)
+    if (_isOpen)
         return state_ok;
     else
         return state_bus_off;
@@ -187,7 +192,8 @@ int CANBlasterInterface::getNumTxDropped()
     return _status.tx_dropped;
 }
 
-int CANBlasterInterface::getIfIndex() {
+int CANBlasterInterface::getIfIndex()
+{
     return _idx;
 }
 
@@ -200,13 +206,13 @@ void CANBlasterInterface::open()
 {
 
     // Start off with a fresh socket
-    if(_socket != NULL)
+    if (_socket != NULL)
     {
         delete _socket;
     }
     _socket = new QUdpSocket();
 
-    if(_socket->bind(QHostAddress::AnyIPv4, 20001))
+    if (_socket->bind(QHostAddress::AnyIPv4, 20001))
     {
         _isOpen = true;
     }
@@ -219,7 +225,7 @@ void CANBlasterInterface::open()
 
 void CANBlasterInterface::close()
 {
-    if(_socket != NULL && _socket->isOpen())
+    if (_socket != NULL && _socket->isOpen())
     {
         _socket->close();
     }
@@ -231,8 +237,8 @@ bool CANBlasterInterface::isOpen()
     return _isOpen;
 }
 
-void CANBlasterInterface::sendMessage(const CanMessage &msg) {
-
+void CANBlasterInterface::sendMessage(const CanMessage &msg)
+{
 }
 
 bool CANBlasterInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeout_ms)
@@ -242,14 +248,14 @@ bool CANBlasterInterface::readMessage(QList<CanMessage> &msglist, unsigned int t
 
     // Record start time
     struct timeval now;
-    gettimeofday(&now,NULL);
+    gettimeofday(&now, NULL);
 
-    if(now.tv_sec - _heartbeat_time.tv_sec > 1)
+    if (now.tv_sec - _heartbeat_time.tv_sec > 1)
     {
 
         _heartbeat_time.tv_sec = now.tv_sec;
 
-        if(_isOpen)
+        if (_isOpen)
         {
             QByteArray Data;
             Data.append("Heartbeat");
@@ -266,25 +272,25 @@ bool CANBlasterInterface::readMessage(QList<CanMessage> &msglist, unsigned int t
         can_frame frame;
         QHostAddress address;
         quint16 port;
-        int res = _socket->readDatagram((char*)&frame, sizeof(can_frame), &address, &port);
+        int res = _socket->readDatagram((char *)&frame, sizeof(can_frame), &address, &port);
 
         // TODO: Read all bytes... to CANFD_MTU max
-//        if (nbytes == CANFD_MTU) {
-//                printf("got CAN FD frame with length %d\n", cfd.len);
-//                /* cfd.flags contains valid data */
-//        } else if (nbytes == CAN_MTU) {
-//                printf("got Classical CAN frame with length %d\n", cfd.len);
-//                /* cfd.flags is undefined */
-//        } else {
-//                fprintf(stderr, "read: invalid CAN(FD) frame\n");
-//                return 1;
-//        }
+        //        if (nbytes == CANFD_MTU) {
+        //                printf("got CAN FD frame with length %d\n", cfd.len);
+        //                /* cfd.flags contains valid data */
+        //        } else if (nbytes == CAN_MTU) {
+        //                printf("got Classical CAN frame with length %d\n", cfd.len);
+        //                /* cfd.flags is undefined */
+        //        } else {
+        //                fprintf(stderr, "read: invalid CAN(FD) frame\n");
+        //                return 1;
+        //        }
 
-        if(res > 0)
+        if (res > 0)
         {
             // Set timestamp to current time
             struct timeval tv;
-            gettimeofday(&tv,NULL);
+            gettimeofday(&tv, NULL);
             CanMessage msg;
             msg.setTimestamp(tv);
 
@@ -296,7 +302,7 @@ bool CANBlasterInterface::readMessage(QList<CanMessage> &msglist, unsigned int t
             msg.setRTR(frame.can_id & CAN_RTR_FLAG);
             msg.setLength(frame.len);
 
-            for(int i=0; i<frame.len && i<CAN_MAX_DLEN; i++)
+            for (int i = 0; i < frame.len && i < CAN_MAX_DLEN; i++)
             {
                 msg.setDataAt(i, frame.data[i]);
             }
@@ -309,6 +315,4 @@ bool CANBlasterInterface::readMessage(QList<CanMessage> &msglist, unsigned int t
         }
     }
     return false;
-
 }
-
